@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\MailFolderController;
 use App\Http\Controllers\Api\MailMessageController;
 use App\Http\Controllers\Api\MailSendController;
+use App\Http\Controllers\Api\ScheduledMailController;
+use App\Http\Controllers\Api\SnoozeController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
@@ -44,5 +46,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('send', [MailSendController::class, 'send']);
         Route::post('drafts', [MailSendController::class, 'saveDraft']);
+
+        Route::get('scheduled', [ScheduledMailController::class, 'index']);
+        Route::post('scheduled', [ScheduledMailController::class, 'store']);
+        Route::delete('scheduled/{scheduled}', [ScheduledMailController::class, 'destroy']);
+
+        Route::get('snoozed', [SnoozeController::class, 'index']);
+        Route::post('snooze', [SnoozeController::class, 'store']);
     });
 });

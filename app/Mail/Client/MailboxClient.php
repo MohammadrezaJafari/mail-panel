@@ -22,6 +22,7 @@ class MailboxClient
         'junk' => ['junk', 'spam', 'junk e-mail', 'junk email'],
         'trash' => ['trash', 'deleted', 'deleted items', 'deleted messages', 'bin'],
         'archive' => ['archive', 'archives', 'all mail'],
+        'snoozed' => ['snoozed', 'snooze'],
     ];
 
     protected bool $connected = false;
@@ -80,7 +81,7 @@ class MailboxClient
         }
 
         usort($out, function ($a, $b) {
-            $order = ['inbox' => 0, 'drafts' => 1, 'sent' => 2, 'archive' => 3, 'junk' => 4, 'trash' => 5];
+            $order = ['inbox' => 0, 'drafts' => 1, 'sent' => 2, 'archive' => 3, 'snoozed' => 4, 'junk' => 5, 'trash' => 6];
             $ra = $order[$a['role']] ?? 10;
             $rb = $order[$b['role']] ?? 10;
 

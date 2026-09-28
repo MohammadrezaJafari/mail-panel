@@ -106,6 +106,19 @@ With `APP_ENV=local` the seeder also creates a demo organization (`acme.test`) w
 Users authenticate with their mailbox password; it is stored encrypted on the user record
 while a token is active so the API can open IMAP/SMTP sessions, and cleared on logout.
 
+## Scheduler
+
+Scheduled sends and snoozed messages are processed by `mail:process-deferred`,
+which the Laravel scheduler runs every minute. Add the usual cron entry:
+
+```
+* * * * * cd /path/to/mail-panel && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Both features use the user's cached mailbox credentials, so they only run while
+the user has an active web-app session; otherwise the item is marked failed and
+shown to the user.
+
 ## Tests
 
 ```bash
