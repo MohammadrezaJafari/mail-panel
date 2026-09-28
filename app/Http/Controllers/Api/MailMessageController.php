@@ -21,6 +21,11 @@ class MailMessageController extends Controller
             'search' => ['nullable', 'string', 'max:200'],
             'filter' => ['nullable', 'in:unread,flagged,attachments'],
             'since_uid' => ['nullable', 'integer', 'min:1'],
+            'from' => ['nullable', 'string', 'max:200'],
+            'to' => ['nullable', 'string', 'max:200'],
+            'subject' => ['nullable', 'string', 'max:200'],
+            'since' => ['nullable', 'date'],
+            'before' => ['nullable', 'date'],
         ]);
 
         $client = $this->client($request);
@@ -33,6 +38,7 @@ class MailMessageController extends Controller
                 $data['search'] ?? null,
                 $data['filter'] ?? null,
                 isset($data['since_uid']) ? (int) $data['since_uid'] : null,
+                array_intersect_key($data, array_flip(['from', 'to', 'subject', 'since', 'before'])),
             ));
         } finally {
             $client->disconnect();

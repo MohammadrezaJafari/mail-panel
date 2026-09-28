@@ -48,4 +48,26 @@ class SieveScriptBuilderTest extends TestCase
         $this->assertStringContainsString('currentdate :value "ge" "iso8601"', $script);
         $this->assertStringContainsString('..dot line', $script);
     }
+
+    public function test_renders_user_rules(): void
+    {
+        $mailbox = new Mailbox([
+            'address' => 'ali@acme.test',
+            'rules' => [
+                ['name' => 'Newsletters', 'enabled' => true, 'match' => 'any',
+                    'conditions' => [['field' => 'from', 'operator' => 'contains', 'value' => 'news@'], ['field' => 'subject', 'operator' => 'starts', 'value' => '[List]']],
+                    'actions' => [['type' => 'move', 'value' => 'Newsletters'], ['type' => 'mark_read'], ['type' => 'stop']]],
+                ['name' => 'Off', 'enabled' => false, 'conditions' => [['field' => 'subject', 'value' => 'x']], 'actions' => [['type' => 'discard']]],
+            ],
+        ]);
+
+        $script = (new SieveScriptBuilder)->build($mailbox);
+
+        $this->assertStringContainsString('require ["fileinto", "imap4flags"];', $script);
+        $this->assertStringContainsString('# rule: Newsletters', $script);
+        $this->assertStringContainsString('if anyof(address :contains "from" "news@", header :matches "subject" "[List]*") {', $script);
+        $this->assertStringContainsString('    fileinto "Newsletters";', $script);
+        $this->assertStringContainsString('    addflag "\\Seen";', $script);
+        $this->assertStringNotContainsString('discard', $script);
+    }
 }

@@ -17,6 +17,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('me/mailbox', [AccountController::class, 'mailbox']);
     Route::put('me/mailbox/settings', [AccountController::class, 'updateSettings']);
+    Route::get('me/mailbox/rules', [AccountController::class, 'rules']);
+    Route::put('me/mailbox/rules', [AccountController::class, 'updateRules']);
     Route::put('me/password', [AccountController::class, 'changePassword']);
     Route::get('me/webmail', [AccountController::class, 'webmail']);
 
@@ -30,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('mail')->group(function () {
         Route::get('folders', [MailFolderController::class, 'index']);
         Route::post('folders', [MailFolderController::class, 'store']);
+        Route::put('folders', [MailFolderController::class, 'update']);
+        Route::delete('folders', [MailFolderController::class, 'destroy']);
 
         Route::get('messages', [MailMessageController::class, 'index']);
         Route::get('messages/{uid}', [MailMessageController::class, 'show'])->whereNumber('uid');

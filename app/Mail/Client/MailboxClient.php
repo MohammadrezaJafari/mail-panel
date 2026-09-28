@@ -106,6 +106,20 @@ class MailboxClient
         $this->connect()->createFolder($name, false);
     }
 
+    public function renameFolder(string $path, string $newPath): void
+    {
+        $this->connect()->getFolderByPath($path)->rename($newPath, false);
+    }
+
+    public function deleteFolder(string $path): void
+    {
+        $folder = $this->connect()->getFolderByPath($path);
+        if ($this->role($folder) !== null) {
+            throw new \InvalidArgumentException('System folders cannot be deleted.');
+        }
+        $folder->delete(true);
+    }
+
     protected function displayName(Folder $folder): string
     {
         $name = $folder->name;
@@ -139,16 +153,37 @@ class MailboxClient
     /**
      * @return array{data: array<int, array>, page: int, per_page: int, total: int}
      */
-    public function messages(string $folderPath, int $page = 1, int $perPage = 25, ?string $search = null, ?string $filter = null, ?int $sinceUid = null): array
+    /**
+     * @param  array{from?: string|null, to?: string|null, subject?: string|null, since?: string|null, before?: string|null}  $criteria
+     */
+    public function messages(string $folderPath, int $page = 1, int $perPage = 25, ?string $search = null, ?string $filter = null, ?int $sinceUid = null, array $criteria = []): array
     {
         $folder = $this->connect()->getFolderByPath($folderPath);
         $query = $folder->query()->setFetchBody(false)->leaveUnread()->softFail();
+        $criteria = array_filter($criteria, fn ($v) => filled($v));
 
         if ($sinceUid !== null) {
             // Only messages that arrived after the client's last known UIDNEXT.
             $query->whereUid($sinceUid.':*');
-        } elseif (filled($search)) {
-            $query->whereText($search);
+        } elseif (filled($search) || $criteria) {
+            if (filled($search)) {
+                $query->whereText($search);
+            }
+            if (isset($criteria['from'])) {
+                $query->whereFrom($criteria['from']);
+            }
+            if (isset($criteria['to'])) {
+                $query->whereTo($criteria['to']);
+            }
+            if (isset($criteria['subject'])) {
+                $query->whereSubject($criteria['subject']);
+            }
+            if (isset($criteria['since'])) {
+                $query->whereSince(Carbon::parse($criteria['since']));
+            }
+            if (isset($criteria['before'])) {
+                $query->whereBefore(Carbon::parse($criteria['before'])->addDay());
+            }
         } else {
             $query->whereAll();
         }

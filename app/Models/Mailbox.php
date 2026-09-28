@@ -29,7 +29,7 @@ class Mailbox extends Model
         'organization_id', 'domain_id', 'local_part', 'address', 'name', 'status', 'is_shared',
         'quota_mb', 'used_bytes', 'message_count', 'forwarding_to', 'forwarding_keep_copy',
         'auto_reply_enabled', 'auto_reply_subject', 'auto_reply_body', 'auto_reply_starts_at',
-        'auto_reply_ends_at', 'signature', 'usage_synced_at',
+        'auto_reply_ends_at', 'signature', 'rules', 'usage_synced_at',
     ];
 
     protected function casts(): array
@@ -43,6 +43,7 @@ class Mailbox extends Model
             'auto_reply_starts_at' => 'datetime',
             'auto_reply_ends_at' => 'datetime',
             'usage_synced_at' => 'datetime',
+            'rules' => 'array',
         ];
     }
 

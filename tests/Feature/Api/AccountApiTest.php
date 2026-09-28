@@ -105,4 +105,21 @@ class AccountApiTest extends TestCase
 
         $this->getJson('/api/v1/mail/folders')->assertStatus(409)->assertJsonPath('code', 'mail_credentials_missing');
     }
+
+    public function test_rules_are_validated_and_saved(): void
+    {
+        [$mailbox, $user] = $this->mailboxUser();
+        $this->actingAs($user, 'sanctum');
+
+        $this->putJson('/api/v1/me/mailbox/rules', ['rules' => [
+            ['name' => 'Bad', 'conditions' => [['field' => 'from', 'value' => 'x']], 'actions' => [['type' => 'forward', 'value' => 'nope']]],
+        ]])->assertStatus(422);
+
+        $this->putJson('/api/v1/me/mailbox/rules', ['rules' => [
+            ['name' => 'Move CI', 'conditions' => [['field' => 'from', 'operator' => 'contains', 'value' => 'ci@']], 'actions' => [['type' => 'move', 'value' => 'CI']]],
+        ]])->assertOk()->assertJsonPath('data.0.name', 'Move CI')->assertJsonStructure(['data' => [['id']]]);
+
+        $this->assertCount(1, $mailbox->fresh()->rules);
+        $this->getJson('/api/v1/me/mailbox/rules')->assertOk()->assertJsonCount(1, 'data');
+    }
 }

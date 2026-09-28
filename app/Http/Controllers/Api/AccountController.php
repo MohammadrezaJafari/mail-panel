@@ -10,6 +10,7 @@ use App\Services\MailboxService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -73,6 +74,47 @@ class AccountController extends Controller
         }
 
         return new MailboxResource($this->mailboxes->updateRules($mailbox, $data)->load('aliases', 'domain'));
+    }
+
+    public function rules(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $this->currentMailbox($request)->rules ?? []]);
+    }
+
+    public function updateRules(Request $request): JsonResponse
+    {
+        $mailbox = $this->currentMailbox($request);
+
+        $data = $request->validate([
+            'rules' => ['present', 'array', 'max:50'],
+            'rules.*.id' => ['nullable', 'string', 'max:40'],
+            'rules.*.name' => ['required', 'string', 'max:100'],
+            'rules.*.enabled' => ['boolean'],
+            'rules.*.match' => ['nullable', 'in:all,any'],
+            'rules.*.conditions' => ['required', 'array', 'min:1', 'max:10'],
+            'rules.*.conditions.*.field' => ['required', 'in:from,to,subject,body,size_over,has_attachment'],
+            'rules.*.conditions.*.operator' => ['nullable', 'in:contains,not_contains,is,starts,ends'],
+            'rules.*.conditions.*.value' => ['nullable', 'string', 'max:500'],
+            'rules.*.actions' => ['required', 'array', 'min:1', 'max:5'],
+            'rules.*.actions.*.type' => ['required', 'in:move,flag,mark_read,forward,discard,stop'],
+            'rules.*.actions.*.value' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        foreach ($data['rules'] as $i => $rule) {
+            foreach ($rule['actions'] as $j => $action) {
+                if ($action['type'] === 'forward' && ! filter_var($action['value'] ?? '', FILTER_VALIDATE_EMAIL)) {
+                    throw ValidationException::withMessages(["rules.{$i}.actions.{$j}.value" => 'Forward action needs a valid e-mail address.']);
+                }
+                if ($action['type'] === 'move' && blank($action['value'] ?? null)) {
+                    throw ValidationException::withMessages(["rules.{$i}.actions.{$j}.value" => 'Move action needs a folder.']);
+                }
+            }
+            $data['rules'][$i]['id'] = $rule['id'] ?? (string) Str::uuid();
+        }
+
+        $this->mailboxes->updateRules($mailbox, ['rules' => $data['rules']]);
+
+        return response()->json(['data' => $mailbox->fresh()->rules ?? []]);
     }
 
     public function changePassword(Request $request): JsonResponse
