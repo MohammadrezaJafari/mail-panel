@@ -71,9 +71,12 @@ class SmtpSender
         }
 
         if (filled($data['in_reply_to'] ?? null)) {
-            $email->getHeaders()->addIdHeader('In-Reply-To', trim($data['in_reply_to'], '<>'));
-            $refs = trim(($data['references'] ?? '').' '.$data['in_reply_to']);
-            $email->getHeaders()->addTextHeader('References', $refs);
+            $parent = trim($data['in_reply_to'], ' <>');
+            $email->getHeaders()->addIdHeader('In-Reply-To', $parent);
+
+            preg_match_all('/[^\s<>,]+@[^\s<>,]+/', (string) ($data['references'] ?? ''), $m);
+            $refs = array_values(array_unique([...$m[0], $parent]));
+            $email->getHeaders()->addIdHeader('References', $refs);
         }
 
         foreach ($data['attachments'] ?? [] as $attachment) {

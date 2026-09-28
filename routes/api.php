@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AliasController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\MailFolderController;
 use App\Http\Controllers\Api\MailMessageController;
 use App\Http\Controllers\Api\MailSendController;
@@ -22,6 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('me/aliases', [AliasController::class, 'index']);
     Route::post('me/aliases', [AliasController::class, 'store']);
     Route::delete('me/aliases/{alias}', [AliasController::class, 'destroy']);
+
+    Route::get('contacts', [ContactController::class, 'index']);
+    Route::post('contacts/sync', [ContactController::class, 'sync']);
 
     Route::prefix('mail')->group(function () {
         Route::get('folders', [MailFolderController::class, 'index']);

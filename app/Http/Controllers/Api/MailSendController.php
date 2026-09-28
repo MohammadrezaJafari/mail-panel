@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ResolvesMailbox;
 use App\Http\Controllers\Controller;
 use App\Mail\Client\SmtpSender;
 use App\Services\AuditLogger;
+use App\Services\ContactService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -14,7 +15,7 @@ class MailSendController extends Controller
 {
     use ResolvesMailbox;
 
-    public function __construct(protected SmtpSender $smtp, protected AuditLogger $audit) {}
+    public function __construct(protected SmtpSender $smtp, protected AuditLogger $audit, protected ContactService $contacts) {}
 
     protected function rules(): array
     {
@@ -64,6 +65,8 @@ class MailSendController extends Controller
         ]);
 
         $this->smtp->send($user, $email);
+
+        $this->contacts->remember($user, array_map(fn ($e) => ['email' => $e], [...$data['to'], ...($data['cc'] ?? []), ...($data['bcc'] ?? [])]));
 
         $client = $this->client($request);
         try {

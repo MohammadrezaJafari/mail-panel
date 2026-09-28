@@ -274,8 +274,23 @@ class MailboxClient
             'answered' => $this->hasFlag($message, 'answered'),
             'has_attachments' => $this->looksLikeAttachments($message),
             'size' => (int) ($message->size ?? 0),
-            'message_id' => (string) ($message->message_id ?? ''),
+            'message_id' => $this->messageId((string) ($message->message_id ?? '')),
+            'in_reply_to' => $this->messageId((string) ($message->in_reply_to ?? '')),
+            'references' => $this->messageIds((string) ($message->references ?? '')),
         ];
+    }
+
+    protected function messageId(string $raw): string
+    {
+        return trim($raw, " \t<>");
+    }
+
+    /** @return array<int, string> */
+    protected function messageIds(string $raw): array
+    {
+        preg_match_all('/<([^>]+)>/', $raw, $m);
+
+        return $m[1] ?: array_values(array_filter(preg_split('/\s+/', trim($raw)) ?: []));
     }
 
     protected function detail(Message $message, string $folderPath): array
@@ -311,8 +326,6 @@ class MailboxClient
             'html' => $html,
             'text' => $text,
             'preview' => Str::limit(trim(strip_tags($text ?? $html ?? '')), 160),
-            'in_reply_to' => (string) ($message->in_reply_to ?? ''),
-            'references' => (string) ($message->references ?? ''),
             'attachments' => $attachments,
             'has_attachments' => count(array_filter($attachments, fn ($a) => ! $a['inline'])) > 0,
         ];
