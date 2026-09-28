@@ -70,6 +70,7 @@ With `APP_ENV=local` the seeder also creates a demo organization (`acme.test`) w
 | `MAIL_HOSTNAME`                 | Public mail host used for DNS verification hints (MX/SPF)       |
 | `USER_IMAP_*`, `USER_SMTP_*`    | Where the API opens IMAP/SMTP sessions on behalf of users       |
 | `WEBMAIL_URL`                   | SOGo URL shown as "Open webmail"                                |
+| `DAV_BASE_URL`                  | CalDAV/CardDAV root (SOGo: `https://host/SOGo/dav/`)             |
 | `AUTH_VIA_IMAP`                 | Allow first login of a mailbox without a local user (IMAP auth) |
 | `FRONTEND_URLS`                 | Comma separated CORS origins of the Quasar app                  |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Seeded super admin                                              |

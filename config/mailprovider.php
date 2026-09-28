@@ -51,6 +51,16 @@ return [
     'webmail_url' => env('WEBMAIL_URL', 'https://mail.example.com/SOGo/'),
 
     /*
+    | CalDAV / CardDAV endpoint used for calendar and contacts. SOGo exposes
+    | both under /SOGo/dav/{user}/ and accepts the mailbox credentials.
+    */
+    'dav' => [
+        'base_url' => rtrim(env('DAV_BASE_URL', 'https://mail.example.com/SOGo/dav/'), '/').'/',
+        'verify_ssl' => (bool) env('DAV_VERIFY_SSL', true),
+        'timeout' => (int) env('DAV_TIMEOUT', 20),
+    ],
+
+    /*
     | When true, users that do not exist locally yet may sign in to the
     | web app with their mailbox credentials (verified against IMAP) and a
     | local user record is provisioned for them on first login.

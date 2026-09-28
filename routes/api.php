@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AddressBookController;
 use App\Http\Controllers\Api\AliasController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\MailFolderController;
 use App\Http\Controllers\Api\MailMessageController;
@@ -30,6 +32,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('contacts', [ContactController::class, 'index']);
     Route::post('contacts/sync', [ContactController::class, 'sync']);
+
+    Route::prefix('calendar')->group(function () {
+        Route::get('calendars', [CalendarController::class, 'calendars']);
+        Route::get('events', [CalendarController::class, 'events']);
+        Route::post('events', [CalendarController::class, 'store']);
+        Route::put('events/{event}', [CalendarController::class, 'update']);
+        Route::delete('events/{event}', [CalendarController::class, 'destroy']);
+    });
+
+    Route::prefix('addressbook')->group(function () {
+        Route::get('books', [AddressBookController::class, 'books']);
+        Route::get('contacts', [AddressBookController::class, 'contacts']);
+        Route::post('contacts', [AddressBookController::class, 'store']);
+        Route::put('contacts/{contact}', [AddressBookController::class, 'update']);
+        Route::delete('contacts/{contact}', [AddressBookController::class, 'destroy']);
+    });
 
     Route::prefix('mail')->group(function () {
         Route::get('folders', [MailFolderController::class, 'index']);

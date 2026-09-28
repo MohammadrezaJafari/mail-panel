@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Dav\AddressBookService;
 use App\Mail\Client\MailboxClient;
 use App\Models\Contact;
 use App\Models\Mailbox;
@@ -57,6 +58,20 @@ class ContactService
                 $this->remember($user, array_values($addresses), $used);
                 $count += count($addresses);
             }
+        }
+
+        try {
+            $books = AddressBookService::forUser($user);
+            foreach ($books->books() as $book) {
+                foreach ($books->contacts($book['href']) as $contact) {
+                    foreach ($contact['emails'] as $email) {
+                        $this->remember($user, [['email' => $email['value'], 'name' => $contact['name']]], false);
+                        $count++;
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // Address book is optional; mail-derived contacts are enough.
         }
 
         $user->forceFill(['contacts_synced_at' => now()])->save();
