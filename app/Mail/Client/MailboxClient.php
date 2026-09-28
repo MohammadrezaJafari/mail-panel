@@ -73,6 +73,8 @@ class MailboxClient
                 'role' => $this->role($folder),
                 'unread' => (int) ($status['unseen'] ?? $status['UNSEEN'] ?? 0),
                 'total' => (int) ($status['messages'] ?? $status['MESSAGES'] ?? 0),
+                'uidnext' => (int) ($status['uidnext'] ?? $status['UIDNEXT'] ?? 0),
+                'uidvalidity' => (int) ($status['uidvalidity'] ?? $status['UIDVALIDITY'] ?? 0),
                 'delimiter' => $folder->delimiter,
             ];
         }
@@ -137,12 +139,15 @@ class MailboxClient
     /**
      * @return array{data: array<int, array>, page: int, per_page: int, total: int}
      */
-    public function messages(string $folderPath, int $page = 1, int $perPage = 25, ?string $search = null, ?string $filter = null): array
+    public function messages(string $folderPath, int $page = 1, int $perPage = 25, ?string $search = null, ?string $filter = null, ?int $sinceUid = null): array
     {
         $folder = $this->connect()->getFolderByPath($folderPath);
         $query = $folder->query()->setFetchBody(false)->leaveUnread()->softFail();
 
-        if (filled($search)) {
+        if ($sinceUid !== null) {
+            // Only messages that arrived after the client's last known UIDNEXT.
+            $query->whereUid($sinceUid.':*');
+        } elseif (filled($search)) {
             $query->whereText($search);
         } else {
             $query->whereAll();
@@ -160,6 +165,10 @@ class MailboxClient
 
         $data = [];
         foreach ($messages as $message) {
+            // "N:*" always matches the last message even when its UID < N; drop it.
+            if ($sinceUid !== null && (int) $message->uid < $sinceUid) {
+                continue;
+            }
             $data[] = $this->summarize($message, $folderPath);
         }
 

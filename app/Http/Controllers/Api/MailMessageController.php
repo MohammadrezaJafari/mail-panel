@@ -20,6 +20,7 @@ class MailMessageController extends Controller
             'per_page' => ['nullable', 'integer', 'min:5', 'max:100'],
             'search' => ['nullable', 'string', 'max:200'],
             'filter' => ['nullable', 'in:unread,flagged,attachments'],
+            'since_uid' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $client = $this->client($request);
@@ -31,6 +32,7 @@ class MailMessageController extends Controller
                 (int) ($data['per_page'] ?? 25),
                 $data['search'] ?? null,
                 $data['filter'] ?? null,
+                isset($data['since_uid']) ? (int) $data['since_uid'] : null,
             ));
         } finally {
             $client->disconnect();
